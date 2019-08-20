@@ -3,22 +3,21 @@ require("dotenv").config();
 var keys = require("./keys.js");
 var axios = require("axios");
 var fs = require("fs");
-var Spotify = require('node-spotify-api');
 var moment = require('moment');  
+var Spotify = require('node-spotify-api');
 var spotify = new Spotify(keys.spotify);
 
-// You should then be able to access your keys information like so)
 var command = process.argv[2];
 var searchFor = process.argv.splice(3).join(" ");
 
-SwitchCommand(command, searchFor)
+switchCommand(command, searchFor)
 
-function SwitchCommand(command, searchFor) {
+function switchCommand(command, searchFor) {
     switch (command) {
         case "movie-this":
-            return FindMovie(searchFor)
+            return findMovie(searchFor)
         case "spotify-this-song":
-            return SpotifySong(searchFor)
+            return spotifySong(searchFor)
         case "concert-this":
             return goConcert(searchFor)
         case "do-what-it-says":
@@ -26,7 +25,7 @@ function SwitchCommand(command, searchFor) {
     }
 }
 
-function SpotifySong(song) {
+function spotifySong(song) {
     if (song.length === 0) {
         song = "The Sign"
     }
@@ -50,16 +49,13 @@ function SpotifySong(song) {
         console.log("-----------------------------------");
     });
 }
-function FindMovie(movieName) {
+function findMovie(movieName) {
     if (movieName.length === 0) {
         movieName = 'Mr. Nobody.'
     }
 
     // Then run a request with axios to the OMDB API with the movie specified
     var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
-
-    // This line is just to help us debug against the actual URL.
-    console.log(queryUrl);
 
     axios.get(queryUrl).then(
         function (response) {
@@ -116,17 +112,12 @@ function FindMovie(movieName) {
 
 function goConcert(artist){
     
-
-    // Then run a request with axios to the OMDB API with the movie specified
     var queryUrl = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp";
-
-    // This line is just to help us debug against the actual URL.
-    console.log(queryUrl);
 
     axios.get(queryUrl).then(
         function (response) {
             console.log("-----------------------------------");
-            //    * Title of the movie.
+           
             for(var i = 0; i< response.data.length;i++){
 
                 console.log((i+1) + ":" + response.data[i].venue.country)
@@ -137,7 +128,7 @@ function goConcert(artist){
                 console.log(moment(data).format('L'))
                 console.log("-----------------------------------");
             }
-            // console.log(response.data[0].venue.country)
+          
 
         })
         .catch(function (error) {
@@ -180,7 +171,7 @@ fs.readFile("./random.txt", "utf8", function(err, data) {
   console.log(myCommand, mySong);
 //   mySong = mySong.replace(/['"]+/g, '');
 
-  var final = SwitchCommand(myCommand, mySong);
+  var final = switchCommand(myCommand, mySong);
   console.log(final);
   fs.appendFile("log.txt", final, function(err) {
 
@@ -195,10 +186,6 @@ fs.readFile("./random.txt", "utf8", function(err, data) {
     }
   
   });
-
-
-
 });
-
 
 }
