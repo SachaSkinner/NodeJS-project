@@ -59,7 +59,7 @@ function spotifySong(song) {
         if (err) {
             return console.log('Error occurred: ' + err);
         }
-        var index = returnIndex(data.tracks.items, song)
+        var index = returnIndex(data.tracks.items, song);
         console.log("index: ", index)
         printSong(data.tracks.items, index)
 
