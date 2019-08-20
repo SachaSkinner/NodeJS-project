@@ -3,7 +3,7 @@ require("dotenv").config();
 var keys = require("./keys.js");
 var axios = require("axios");
 var fs = require("fs");
-var moment = require('moment');  
+var moment = require('moment');
 var Spotify = require('node-spotify-api');
 var spotify = new Spotify(keys.spotify);
 
@@ -21,38 +21,55 @@ function switchCommand(command, searchFor) {
         case "concert-this":
             return goConcert(searchFor)
         case "do-what-it-says":
-            return justDoIt(searchFor) 
+            return justDoIt()
     }
+}
+
+function returnIndex(array, song) {
+    for (var i = 0; i < array.length; i++) {
+        if (array[i].name.toLowerCase() === song.toLowerCase()) {
+            return i
+        }
+    }
+    return 0
+}
+function printSong(array, index) {
+    console.log("-----------------------------------");
+    // an artist
+    console.log("Artist - '" + array[index].artists[0].name + "'")
+    console.log("-----------------------------------");
+    // album
+    console.log("Album '" + array[index].album.name + "'")
+    console.log("-----------------------------------");
+    // song full name
+    console.log("Song - '" + array[index].name + "'")
+    console.log("-----------------------------------");
+    // a link on Spotify
+    console.log("Link on Spotify(song) '" + array[index].external_urls.spotify + "'")
+    console.log("-----------------------------------");
 }
 
 function spotifySong(song) {
     if (song.length === 0) {
         song = "The Sign"
     }
+    writeLog("spotify-this-song", song)
 
     spotify.search({ type: 'track', query: song }, function (err, data) {
         if (err) {
             return console.log('Error occurred: ' + err);
         }
-        console.log("-----------------------------------");
-        // an artist
-        console.log("Artist - '" + data.tracks.items[0].artists[0].name + "'")
-        console.log("-----------------------------------");
-        // album
-        console.log("Album '" + data.tracks.items[0].album.name + "'")
-        console.log("-----------------------------------");
-        // song full name
-        console.log("Song - '" + data.tracks.items[0].name + "'")
-        console.log("-----------------------------------");
-        // a link on Spotify
-        console.log("Link on Spotify(song) '" + data.tracks.items[0].external_urls.spotify + "'")
-        console.log("-----------------------------------");
+        var index = returnIndex(data.tracks.items, song)
+        console.log("index: ", index)
+        printSong(data.tracks.items, index)
+
     });
 }
 function findMovie(movieName) {
     if (movieName.length === 0) {
         movieName = 'Mr. Nobody.'
     }
+    writeLog('movie-this', movieName)
 
     // Then run a request with axios to the OMDB API with the movie specified
     var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
@@ -110,25 +127,29 @@ function findMovie(movieName) {
 
 }
 
-function goConcert(artist){
-    
+function goConcert(artist) {
+    if (!artist) {
+        artist = 'Lady Gaga'
+    }
+    writeLog('concert-this', artist)
+
     var queryUrl = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp";
 
     axios.get(queryUrl).then(
         function (response) {
             console.log("-----------------------------------");
-           
-            for(var i = 0; i< response.data.length;i++){
 
-                console.log((i+1) + ":" + response.data[i].venue.country)
+            for (var i = 0; i < response.data.length; i++) {
+
+                console.log((i + 1) + ":" + response.data[i].venue.country)
                 console.log(response.data[i].venue.city)
-                console.log( response.data[i].venue.name)
+                console.log(response.data[i].venue.name)
                 var data = response.data[i].datetime;
 
                 console.log(moment(data).format('L'))
                 console.log("-----------------------------------");
             }
-          
+
 
         })
         .catch(function (error) {
@@ -154,38 +175,40 @@ function goConcert(artist){
 
 
 }
-function justDoIt(){
-   
-  
-fs.readFile("./random.txt", "utf8", function(err, data) {
-  if (err) {
-    return console.log(err);
-  }
 
-  // Break the string down by comma separation and store the contents into the output array.
-  
-  var output = data.split(",");
-//   console.log(output);
-  var myCommand = output[0];
-  var mySong = output[1];
-  console.log(myCommand, mySong);
-//   mySong = mySong.replace(/['"]+/g, '');
+function justDoIt() {
+    fs.readFile("./random.txt", "utf8", function (err, data) {
+        if (err) {
+            return console.log(err);
+        }
 
-  var final = switchCommand(myCommand, mySong);
-  console.log(final);
-  fs.appendFile("log.txt", final, function(err) {
+        // Break the string down by comma separation and store the contents into the output array.
 
-    // If an error was experienced we will log it.
-    if (err) {
-      console.log(err);
-    }
-  
-    // If no error is experienced, we'll log the phrase "Content Added" to our node console.
-    else {
-      console.log("Content Added!");
-    }
-  
-  });
-});
+        var output = data.split(",");
 
+        for (var i = 0; i < output.length; i++) {
+            if (i % 2 === 0) {
+                var myCommand = output[i];
+                var mySearch = output[i + 1];
+                switchCommand(myCommand, mySearch);
+            }
+        }
+    });
+}
+
+function writeLog(command, search) {
+    const text = command + "," + search + ","
+    fs.appendFile("log.txt", text, function (err) {
+
+        // If an error was experienced we will log it.
+        if (err) {
+            console.log(err);
+        }
+
+        // If no error is experienced, we'll log the phrase "Content Added" to our node console.
+        else {
+            console.log("Content Added!");
+        }
+
+    });
 }
